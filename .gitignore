@@ -1,0 +1,21 @@
+# Vendor - install via composer install
+/vendor/
+
+# Uploads - user generated content
+/uploads/
+
+# Env & secrets
+.env
+.env.local
+config/database.local.php
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+
+# Temp
+*.tmp
+*.cache
