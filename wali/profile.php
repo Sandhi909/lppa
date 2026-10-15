@@ -12,8 +12,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if ($password_lama === '' || $password_baru === '' || $password_konfirmasi === '') {
         $error = 'Semua field password wajib diisi.';
-    } elseif (strlen($password_baru) < 6) {
-        $error = 'Password baru minimal 6 karakter.';
     } elseif ($password_baru !== $password_konfirmasi) {
         $error = 'Password baru dan konfirmasi tidak cocok.';
     } else {
@@ -50,16 +48,15 @@ include __DIR__ . '/../includes/header.php';
           <?= csrf_field() ?>
           <div class="mb-3">
             <label class="form-label">Password Lama</label>
-            <input type="password" name="password_lama" class="form-control" required minlength="6">
+            <input type="password" name="password_lama" class="form-control" required>
           </div>
           <div class="mb-3">
             <label class="form-label">Password Baru</label>
-            <input type="password" name="password_baru" class="form-control" required minlength="6">
-            <div class="form-text">Minimal 6 karakter</div>
+            <input type="password" name="password_baru" class="form-control" required>
           </div>
           <div class="mb-3">
             <label class="form-label">Konfirmasi Password Baru</label>
-            <input type="password" name="password_konfirmasi" class="form-control" required minlength="6">
+            <input type="password" name="password_konfirmasi" class="form-control" required>
           </div>
           <button type="submit" class="btn btn-primary"><i class="fa-solid fa-key me-1"></i>Ubah Password</button>
           <a href="index" class="btn btn-light">Kembali</a>

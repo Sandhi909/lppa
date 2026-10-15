@@ -156,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pid = (int)$_POST['partner_id'];
         $st = db()->prepare('SELECT * FROM partners WHERE id=?'); $st->execute([$pid]); $p = $st->fetch();
         $username = trim($_POST['username'] ?? ''); $pass = $_POST['password'] ?? '';
-        if (!$p || $username === '' || strlen($pass) < 6) { flash('danger', 'Username wajib diisi & password minimal 6 karakter.'); redirect('partners.php'); }
+        if (!$p || $username === '' || $pass === '') { flash('danger', 'Username dan password wajib diisi.'); redirect('partners.php'); }
         $cek = db()->prepare('SELECT id FROM users WHERE username=?'); $cek->execute([$username]);
         if ($cek->fetch()) { flash('danger', 'Username sudah digunakan.'); redirect('partners.php'); }
         db()->prepare('INSERT INTO users (nama, username, email, password, role, status) VALUES (?,?,?,?,"mitra","aktif")')
@@ -368,7 +368,7 @@ include __DIR__ . '/../includes/header.php';
   <div class="modal-header"><h5 class="modal-title">Buat Akun untuk <?= e($r['nama_mitra']) ?></h5><button class="btn-close" data-bs-dismiss="modal" type="button"></button></div>
   <div class="modal-body">
     <div class="mb-2"><label class="form-label">Username</label><input name="username" class="form-control" required></div>
-    <div><label class="form-label">Password (min. 6 karakter)</label><input name="password" type="text" class="form-control" required minlength="6"></div>
+    <div><label class="form-label">Password</label><input name="password" type="text" class="form-control" required></div>
   </div>
   <div class="modal-footer"><button class="btn btn-primary">Buat Akun</button></div>
 </form></div></div></div>

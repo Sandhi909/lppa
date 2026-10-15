@@ -40,11 +40,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect(base_url('orang_tua/profile.php'));
     }
     
-    if ($password && strlen($password) < 6) {
-        flash('danger', 'Password minimal 6 karakter.');
-        redirect(base_url('orang_tua/profile.php'));
-    }
-    
     try {
         if ($password) {
             $stmt = db()->prepare("UPDATE users SET nama = ?, email = ?, password = ? WHERE id = ?");

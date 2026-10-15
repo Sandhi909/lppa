@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'status' => ($_POST['status'] ?? 'aktif') === 'aktif' ? 'aktif' : 'nonaktif',
         ];
         if ($d['nama'] === '') { flash('danger', 'Nama wajib diisi.'); redirect('wali_santri.php'); }
-        if ($d['email'] !== '' && !filter_var($d['email'], FILTER_VALIDATE_EMAIL)) { flash('danger', 'Format email tidak valid.'); redirect('wali_santri.php'); }
+        if (!empty($d['email']) && !filter_var($d['email'], FILTER_VALIDATE_EMAIL)) { flash('danger', 'Format email tidak valid.'); redirect('wali_santri.php'); }
         if ($id) {
             $set = implode(',', array_map(fn($k) => "$k=:$k", array_keys($d)));
             db()->prepare("UPDATE recommenders SET $set WHERE id=:id")->execute($d + ['id' => $id]);
@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $rid = (int)$_POST['rec_id'];
         $st = db()->prepare('SELECT * FROM recommenders WHERE id=?'); $st->execute([$rid]); $r = $st->fetch();
         $username = trim($_POST['username'] ?? ''); $pass = $_POST['password'] ?? ''; $email = trim($_POST['email'] ?? '');
-        if (!$r || $username === '' || strlen($pass) < 6) { flash('danger', 'Username wajib & password minimal 6 karakter.'); redirect('wali_santri.php'); }
+        if (!$r || $username === '' || $pass === '') { flash('danger', 'Username dan password wajib diisi.'); redirect('wali_santri.php'); }
         $cek = db()->prepare('SELECT id FROM users WHERE username=?'); $cek->execute([$username]);
         if ($cek->fetch()) { flash('danger', 'Username sudah digunakan.'); redirect('wali_santri.php'); }
         db()->prepare('INSERT INTO users (nama, username, email, password, role, status) VALUES (?,?,?,?,?,"aktif")')
@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($act === 'reset') {
         $uid = (int)$_POST['user_id']; $pass = $_POST['password'] ?? '';
-        if (strlen($pass) < 6) { flash('danger', 'Password minimal 6 karakter.'); redirect('wali_santri.php'); }
+        if ($pass === '') { flash('danger', 'Password wajib diisi.'); redirect('wali_santri.php'); }
         db()->prepare('UPDATE users SET password=? WHERE id=?')->execute([password_hash($pass, PASSWORD_DEFAULT), $uid]);
         audit('Reset password pengguna', 'users', $uid);
         flash('success', 'Password berhasil direset.'); redirect('wali_santri.php');
@@ -138,7 +138,7 @@ include __DIR__ . '/../includes/header.php';
   <div class="modal-body">
     <div class="mb-2"><label class="form-label">Username</label><input name="username" class="form-control" required></div>
     <div class="mb-2"><label class="form-label">Email</label><input type="email" name="email" class="form-control" value="<?= e($r['email'] ?? '') ?>"></div>
-    <div><label class="form-label">Password (min. 6 karakter)</label><input name="password" type="text" class="form-control" required minlength="6"></div>
+    <div><label class="form-label">Password</label><input name="password" type="text" class="form-control" required></div>
   </div>
   <div class="modal-footer"><button class="btn btn-primary">Buat Akun</button></div>
 </form></div></div></div>

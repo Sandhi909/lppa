@@ -21,13 +21,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             db()->prepare('UPDATE users SET nama=?, username=?, email=?, role=?, status=? WHERE id=?')
                ->execute([$nama, $username, $email ?: null, $role, $status, $id]);
             if ($pass !== '') {
-                if (strlen($pass) < 6) { flash('danger', 'Password minimal 6 karakter.'); redirect('users.php'); }
                 db()->prepare('UPDATE users SET password=? WHERE id=?')->execute([password_hash($pass, PASSWORD_DEFAULT), $id]);
             }
             audit('Mengubah akun pengguna: ' . $username, 'users', $id);
             flash('success', 'Akun pengguna diperbarui.');
         } else {
-            if (strlen($pass) < 6) { flash('danger', 'Password minimal 6 karakter.'); redirect('users.php'); }
+            if ($pass === '') { flash('danger', 'Password wajib diisi untuk akun baru.'); redirect('users.php'); }
             db()->prepare('INSERT INTO users (nama, username, email, password, role, status) VALUES (?,?,?,?,?,?)')
                ->execute([$nama, $username, $email ?: null, password_hash($pass, PASSWORD_DEFAULT), $role, $status]);
             audit('Menambah akun pengguna: ' . $username, 'users', (int)db()->lastInsertId());
@@ -74,7 +73,7 @@ include __DIR__ . '/../includes/header.php';
         <?php foreach ($roleLabel as $k => $v): ?><option value="<?= $k ?>" <?= ($row['role'] ?? '') === $k ? 'selected' : '' ?>><?= $v ?></option><?php endforeach; ?>
       </select></div>
       <div class="mb-3"><label class="form-label">Password <?= $row ? '(kosongkan bila tidak diubah)' : '*' ?></label>
-        <input type="text" name="password" class="form-control" <?= $row ? '' : 'required minlength="6"' ?>></div>
+        <input type="text" name="password" class="form-control" <?= $row ? '' : 'required' ?>></div>
       <div><label class="form-label">Status</label><select name="status" class="form-select">
         <option value="aktif" <?= ($row['status'] ?? 'aktif') === 'aktif' ? 'selected' : '' ?>>Aktif</option>
         <option value="nonaktif" <?= ($row['status'] ?? '') === 'nonaktif' ? 'selected' : '' ?>>Tidak Aktif</option></select></div>

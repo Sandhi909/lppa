@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $rid = (int)$_POST['rec_id'];
         $st = db()->prepare('SELECT * FROM recommenders WHERE id=?'); $st->execute([$rid]); $r = $st->fetch();
         $username = trim($_POST['username'] ?? ''); $pass = $_POST['password'] ?? ''; $email = trim($_POST['email'] ?? '');
-        if (!$r || $username === '' || strlen($pass) < 6) { flash('danger', 'Username wajib & password minimal 6 karakter.'); redirect('recommenders.php'); }
+        if (!$r || $username === '' || $pass === '') { flash('danger', 'Username dan password wajib diisi.'); redirect('recommenders.php'); }
         $cek = db()->prepare('SELECT id FROM users WHERE username=?'); $cek->execute([$username]);
         if ($cek->fetch()) { flash('danger', 'Username sudah digunakan.'); redirect('recommenders.php'); }
         db()->prepare('INSERT INTO users (nama, username, email, password, role) VALUES (?,?,?,?,?)')
@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($act === 'reset') {
         $uid = (int)$_POST['user_id']; $pass = $_POST['password'] ?? '';
-        if (strlen($pass) < 6) { flash('danger', 'Password minimal 6 karakter.'); redirect('recommenders.php'); }
+        if ($pass === '') { flash('danger', 'Password wajib diisi.'); redirect('recommenders.php'); }
         db()->prepare('UPDATE users SET password=? WHERE id=?')->execute([password_hash($pass, PASSWORD_DEFAULT), $uid]);
         audit('Reset password pengguna', 'users', $uid);
         flash('success', 'Password berhasil direset.'); redirect('recommenders.php');
@@ -150,14 +150,14 @@ include __DIR__ . '/../includes/header.php';
     <div class="modal-body">
       <div class="mb-2"><label class="form-label">Username</label><input name="username" class="form-control" required></div>
       <div class="mb-2"><label class="form-label">Email</label><input type="email" name="email" class="form-control"></div>
-      <div><label class="form-label">Password (min. 6)</label><input name="password" type="text" class="form-control" required minlength="6"></div>
+      <div><label class="form-label">Password</label><input name="password" type="text" class="form-control" required></div>
     </div><div class="modal-footer"><button class="btn btn-primary">Buat Akun</button></div>
   </form></div></div>
   <?php else: ?>
   <div class="modal fade" id="rs<?= (int)$r['id'] ?>" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><form method="post" class="modal-content">
     <?= csrf_field() ?><input type="hidden" name="aksi" value="reset"><input type="hidden" name="user_id" value="<?= (int)$r['uid'] ?>">
     <div class="modal-header"><h5 class="modal-title">Reset Password - <?= e($r['nama']) ?></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-    <div class="modal-body"><label class="form-label">Password Baru (min. 6)</label><input name="password" type="text" class="form-control" required minlength="6"></div>
+    <div class="modal-body"><label class="form-label">Password Baru</label><input name="password" type="text" class="form-control" required></div>
     <div class="modal-footer"><button class="btn btn-primary">Simpan</button></div>
   </form></div></div>
   <?php endif; ?>
