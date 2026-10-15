@@ -45,6 +45,7 @@ function nav_item(string $url, string $icon, string $label, bool $active): strin
     <li class="nav-caption">Laporan</li>
     <?= nav_item(base_url('reports/index.php'), 'fa-file-lines', 'Laporan', $dir==='reports') ?>
     <?= nav_item(base_url('admin/recap.php'), 'fa-ranking-star', 'Rekap Rekomendator', $cur==='recap.php') ?>
+    <?= nav_item(base_url('admin/tax_report.php'), 'fa-percent', 'Laporan Pajak', $cur==='tax_report.php') ?>
     <?= nav_item(base_url('admin/audit.php'), 'fa-clock-rotate-left', 'Riwayat Aktivitas', $cur==='audit.php') ?>
   <?php elseif (role() === 'direksi'): ?>
     <li class="nav-caption">Utama</li>

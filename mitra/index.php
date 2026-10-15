@@ -23,7 +23,8 @@ $sum = students_summary($where, $params);
 $pct = persentase_mitra($pid); // persentase milik Mitra ini saja
 // Hitung fee bagi hasil yayasan dalam nominal (untuk kotak dashboard)
 $bagiHasilKotor = (float)$sum['total_biaya'] * (float)$pct / 100;
-$taxInfoCard = info_pajak_mitra($pid, $where, $params);
+$currentAcademicYearId = $_GET['academic_year_id'] ?? $defaultTAId;
+$taxInfoCard = info_pajak_mitra($pid, $where, $params, $currentAcademicYearId);
 $feeBagiHasilNominal = $taxInfoCard['total_bersih']; // sudah potong pajak jika ada
 if ($taxInfoCard['pajak_nominal'] <= 0) $feeBagiHasilNominal = $bagiHasilKotor;
 $perUnit = chart_per_unit($where, $params);
@@ -62,7 +63,7 @@ $cards = [
   <div class="col-lg-4"><div class="card h-100"><div class="card-header">Ringkasan Bagi Hasil Yayasan</div><div class="card-body">
     <?php
     $bagiHasilKotor = (float)$sum['total_biaya'] * $pct / 100;
-    $taxInfo = info_pajak_mitra($pid, $where, $params);
+    $taxInfo = info_pajak_mitra($pid, $where, $params, $currentAcademicYearId);
     ?>
     <table class="table table-sm mb-0">
       <tr><td class="text-muted">Total Biaya</td><td class="text-end"><?= rupiah($sum['total_biaya']) ?></td></tr>

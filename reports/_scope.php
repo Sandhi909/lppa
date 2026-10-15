@@ -48,15 +48,27 @@ function build_report(string $jl, string $where, array $params): array {
                 'Biaya Pendaftaran','Biaya Program','Total Biaya','Status','Wali Kelas','Wali Santri'],
                 'rows' => $out, 'money' => [10,11,12]];
         case 'mitra':
-            // Rekap per Mitra: setiap Mitra memakai persentase bagi hasilnya sendiri
+            // Rekap per Mitra: setiap Mitra memakai persentase bagi hasilnya sendiri + pajak per tahun ajaran
             $g = rekap_per_mitra($where, $params);
             $out = [];
-            foreach ($g as $i => $r) $out[] = [$i + 1, $r['nama_mitra'],
-                persen_fmt($r['persentase_bagi_hasil']) . '%', (int)$r['jml'],
-                (float)$r['biaya_pendaftaran'], (float)$r['biaya_program'], (float)$r['total_biaya']];
+            $academicYearId = null;
+            // Extract academic_year_id from params if present
+            if (strpos($where, 's.academic_year_id = ?') !== false) {
+                $ayParams = array_values(array_filter($params, function($p) { return is_numeric($p) && $p > 0; }));
+                $academicYearId = $ayParams[0] ?? null;
+            }
+            foreach ($g as $i => $r) {
+                $bagiHasil = (float)$r['total_biaya'] * (float)$r['persentase_bagi_hasil'] / 100;
+                $setoranBersih = hitung_total_setoran($bagiHasil, $r['id'], $academicYearId);
+                $pajak = $bagiHasil - $setoranBersih;
+                $out[] = [$i + 1, $r['nama_mitra'],
+                    persen_fmt($r['persentase_bagi_hasil']) . '%', (int)$r['jml'],
+                    (float)$r['biaya_pendaftaran'], (float)$r['biaya_program'], (float)$r['total_biaya'],
+                    $bagiHasil, $pajak, $setoranBersih];
+            }
             return ['header' => ['No', 'Mitra', 'Persentase Bagi Hasil', 'Total Data Siswa',
-                'Biaya Pendaftaran', 'Biaya Program', 'Total Biaya'],
-                'rows' => $out, 'money' => [4,5,6]];
+                'Biaya Pendaftaran', 'Biaya Program', 'Total Biaya', 'Bagi Hasil Kotor', 'Pajak', 'Setoran Bersih'],
+                'rows' => $out, 'money' => [4,5,6,7,8,9]];
         case 'unit': case 'tahun_ajaran':
             $cfg = [
               'unit' => ['u.id', 'u.nama_unit', 'LEFT JOIN units u ON u.id=s.unit_id', 'Unit'],

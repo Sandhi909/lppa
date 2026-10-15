@@ -28,49 +28,66 @@ function badge_setoran_status(string $s): string {
 }
 
 /** Tagihan bagi hasil Yayasan = total biaya siswa x persentase mitra */
-function tagihan_bagi_hasil_mitra(int $partnerId): float {
-    $st = db()->prepare(
-        'SELECT COALESCE(SUM(s.total_biaya * COALESCE(p.persentase_bagi_hasil, 0) / 100), 0)
-         FROM students s
-         JOIN partners p ON p.id = s.partner_id
-         WHERE s.partner_id = ?'
-    );
-    $st->execute([$partnerId]);
+function tagihan_bagi_hasil_mitra(int $partnerId, ?int $academicYearId = null): float {
+    $sql = 'SELECT COALESCE(SUM(s.total_biaya * COALESCE(p.persentase_bagi_hasil, 0) / 100), 0)
+            FROM students s
+            JOIN partners p ON p.id = s.partner_id
+            WHERE s.partner_id = ?';
+    $params = [$partnerId];
+    
+    if ($academicYearId) {
+        $sql .= ' AND s.academic_year_id = ?';
+        $params[] = $academicYearId;
+    }
+    
+    $st = db()->prepare($sql);
+    $st->execute($params);
     $bagiHasil = (float)$st->fetchColumn();
     
     // Apply tax deduction if enabled
-    return hitung_total_setoran($bagiHasil, $partnerId);
+    return hitung_total_setoran($bagiHasil, $partnerId, $academicYearId);
 }
 
 /** Total setoran yang sudah disetujui */
-function total_setoran_disetujui(int $partnerId): float {
+function total_setoran_disetujui(int $partnerId, ?int $academicYearId = null): float {
     $st = db()->prepare(
         "SELECT COALESCE(SUM(nominal), 0) FROM setoran_bagi_hasil
-         WHERE partner_id = ? AND status = 'disetujui'"
+         WHERE partner_id = ? AND status = 'disetujui'" . ($academicYearId ? ' AND academic_year_id = ?' : '') . ""
     );
-    $st->execute([$partnerId]);
+    if ($academicYearId) {
+        $st->execute([$partnerId, $academicYearId]);
+    } else {
+        $st->execute([$partnerId]);
+    }
     return (float)$st->fetchColumn();
 }
 
 /** Sisa setoran = tagihan bagi hasil (net) - total setoran disetujui */
-function sisa_setoran_mitra(int $partnerId): float {
-    $tagihan = tagihan_bagi_hasil_mitra($partnerId);
-    $disetujui = total_setoran_disetujui($partnerId);
+function sisa_setoran_mitra(int $partnerId, ?int $academicYearId = null): float {
+    $tagihan = tagihan_bagi_hasil_mitra($partnerId, $academicYearId);
+    $disetujui = total_setoran_disetujui($partnerId, $academicYearId);
     $sisa = $tagihan - $disetujui;
     return max(0, $sisa); // Tidak boleh negatif
 }
 
 /** Get tax info for display (bagi hasil kotor, pajak, total bersih) */
-function info_pajak_mitra(int $partnerId, string $where = '1=1', array $params = []): array {
+function info_pajak_mitra(int $partnerId, string $where = '1=1', array $params = [], ?int $academicYearId = null): array {
+    // If academicYearId filter provided, add to where clause
+    $sqlWhere = $where;
+    if ($academicYearId) {
+        $sqlWhere .= ' AND s.academic_year_id = ?';
+        $params[] = $academicYearId;
+    }
+    
     $sql = 'SELECT COALESCE(SUM(s.total_biaya * COALESCE(p.persentase_bagi_hasil, 0) / 100), 0) as bagi_hasil_kotor
          FROM students s
          JOIN partners p ON p.id = s.partner_id
-         WHERE s.partner_id = ? AND ' . $where;
+         WHERE s.partner_id = ? AND ' . $sqlWhere;
     $st = db()->prepare($sql);
     $st->execute(array_merge([$partnerId], $params));
     $bagiHasilKotor = (float)$st->fetchColumn();
     
-    $tax = get_tax_config($partnerId);
+    $tax = get_tax_config($partnerId, $academicYearId);
     $pajak = 0;
     $pajakMethod = $tax['method'];
     
@@ -93,7 +110,7 @@ function info_pajak_mitra(int $partnerId, string $where = '1=1', array $params =
     ];
 }
 
-function ringkasan_setoran_mitra(int $partnerId, int $academicYearId = null): array {
+function ringkasan_setoran_mitra(int $partnerId, ?int $academicYearId = null): array {
     $whereClause = 's.partner_id = ?';
     $params = [$partnerId];
     
@@ -111,7 +128,7 @@ function ringkasan_setoran_mitra(int $partnerId, int $academicYearId = null): ar
     );
     $st->execute($params);
     $tagihanKotor = (float)$st->fetchColumn();
-    $tagihan = hitung_total_setoran($tagihanKotor, $partnerId);
+    $tagihan = hitung_total_setoran($tagihanKotor, $partnerId, $academicYearId);
     
     // Hitung total disetujui
     $st = db()->prepare(

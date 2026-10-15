@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $status = $autoApprove ? 'disetujui' : 'pending';
         
         // Calculate tax for historical record
-        $tax = get_tax_config($partnerId);
+        $tax = get_tax_config($partnerId, $academicYearId);
         $pajak = 0;
         if ($tax['enabled']) {
             if ($tax['method'] === 'percentage') {
@@ -520,7 +520,9 @@ function updateTaxPreview() {
   }
   
   // Get tax config via AJAX
-  fetch('<?= base_url('admin/api_tax_config.php') ?>?partner_id=' + partnerId)
+  const academicYearSelect = document.querySelector('select[name="academic_year_id"]');
+  const academicYearId = academicYearSelect ? academicYearSelect.value : '';
+  fetch('<?= base_url('admin/api_tax_config.php') ?>?partner_id=' + partnerId + '&academic_year_id=' + academicYearId)
     .then(response => response.json())
     .then(data => {
       let pajak = 0;

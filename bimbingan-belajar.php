@@ -25,6 +25,30 @@ foreach ($kontenLppa as $k) {
     $kontenArray[$k['bagian']] = $k;
 }
 
+// Kontak footer dibaca dari konten_lppa bagian "kontak" (dikelola Admin)
+// agar editan di halaman Manajemen Konten tampil di sini.
+// Format bebas, mis: "Jl. Raya ... Email: info@x.com | Telepon: (022) 1234"
+$kontakRaw = trim(strip_tags($kontenArray['kontak']['konten'] ?? ''));
+$kontakAddr = 'Bandung, Indonesia';
+$kontakEmail = 'info@almasoem.sch.id';
+$kontakPhone = '+62 22 XXX XXXX';
+if ($kontakRaw !== '') {
+    if (preg_match('/[\w.+-]+@[\w-]+\.[\w.]+/', $kontakRaw, $m)) {
+        $kontakEmail = $m[0];
+    }
+    if (preg_match('/(?:telepon|telp\.?|phone|hp|whatsapp|wa)\s*:?\s*([(+][\d\s().\/-]{5,}|[\d][\d\s().\/-]{5,})/i', $kontakRaw, $m)) {
+        $kontakPhone = trim($m[1]);
+    }
+    $addr = preg_replace('/(?:e-?mail\s*:?\s*)?' . preg_quote($kontakEmail, '/') . '/i', '', $kontakRaw);
+    $addr = preg_replace('/[|\/]?\s*(?:telepon|telp\.?|phone|hp|whatsapp|wa)\s*:?\s*[+\d(][\d\s().\/-]*/i', '', (string)$addr);
+    $addr = preg_replace('/(\s*[|\/]\s*){2,}/', ' | ', (string)$addr);
+    $addr = trim((string)$addr, " \t\n\r\0\x0B|/-,.");
+    $addr = preg_replace('/\s+/', ' ', (string)$addr);
+    if ($addr !== '') {
+        $kontakAddr = $addr;
+    }
+}
+
 // Build query
 $where = "p.is_public = 1 AND p.status = 'aktif'";
 $params = [];
@@ -93,6 +117,15 @@ $lembaga = $lembaga->fetchAll();
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
             color: var(--dark);
+            overflow-x: clip;
+        }
+        
+        img {
+            max-width: 100%;
+        }
+        
+        section[id] {
+            scroll-margin-top: 120px;
         }
         
         /* Hero Section */
@@ -690,31 +723,6 @@ $lembaga = $lembaga->fetchAll();
             opacity: 0.8;
         }
         
-        .footer-social {
-            display: flex;
-            gap: 15px;
-            margin-top: 25px;
-        }
-        
-        .social-link {
-            width: 40px;
-            height: 40px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            text-decoration: none;
-            transition: all 0.3s;
-        }
-        
-        .social-link:hover {
-            background: white;
-            color: var(--primary);
-            transform: translateY(-3px);
-        }
-        
         .footer-divider {
             border-color: rgba(255,255,255,0.1);
             margin: 40px 0;
@@ -761,58 +769,413 @@ $lembaga = $lembaga->fetchAll();
         /* Responsive */
         @media (max-width: 768px) {
             .hero {
-                padding: 60px 0 40px;
+                padding: 50px 0 40px;
+            }
+            
+            .hero-identity {
+                gap: 15px;
+                margin-bottom: 25px;
+                justify-content: center;
+            }
+            
+            .lppa-logo {
+                width: 70px;
+                max-height: 70px;
+            }
+            
+            .lppa-acronym {
+                font-size: 1.4rem;
+            }
+            
+            .lppa-fullname {
+                font-size: 0.8rem;
+            }
+            
+            .hero-content {
+                text-align: center;
             }
             
             .hero h1 {
                 font-size: 2rem;
+                margin-bottom: 1.2rem;
+                line-height: 1.3;
             }
             
             .hero-subtitle {
                 font-size: 1rem;
+                margin-bottom: 2rem;
+                line-height: 1.6;
             }
             
             .hero-cta {
                 flex-direction: column;
-                gap: 10px;
+                gap: 12px;
+                align-items: center;
+            }
+            
+            .hero-cta .btn {
+                width: 100%;
+                max-width: 300px;
+                justify-content: center;
             }
             
             .hero-visual {
-                height: 250px;
+                display: none;
             }
             
-            .hero-icon-wrapper {
-                width: 180px;
-                height: 180px;
-                font-size: 3.5rem;
+            /* Filters */
+            .filters {
+                padding: 20px 0;
+            }
+            
+            .filters .row {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .filters .col-md-8,
+            .filters .col-md-4 {
+                width: 100%;
+            }
+            
+            .filters .d-flex {
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            
+            .filter-btn {
+                margin: 0;
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+            
+            .search-box {
+                max-width: 100%;
+            }
+            
+            /* Section Headers */
+            .bimbingan-belajar-section {
+                padding: 60px 0;
+            }
+            
+            .section-header {
+                margin-bottom: 40px;
+            }
+            
+            .section-badge {
+                font-size: 0.85rem;
+                padding: 8px 18px;
             }
             
             .section-title {
-                font-size: 1.8rem;
+                font-size: 2rem;
             }
             
             .section-subtitle {
                 font-size: 1rem;
             }
             
-            .search-box {
-                max-width: 100%;
-                margin-top: 15px;
-            }
-            
-            .filter-btn {
-                margin-right: 5px;
-                margin-bottom: 5px;
-                padding: 8px 16px;
-                font-size: 0.9rem;
-            }
-            
+            /* Partner Cards */
             .partner-card {
-                margin-bottom: 20px;
+                margin-bottom: 25px;
             }
             
             .partner-logo-wrapper {
+                height: 160px;
+            }
+            
+            .partner-card-body {
+                padding: 25px;
+            }
+            
+            .partner-name {
+                font-size: 1.3rem;
+            }
+            
+            .partner-desc {
+                font-size: 0.95rem;
+            }
+            
+            .partner-level {
+                font-size: 0.8rem;
+                padding: 6px 14px;
+            }
+            
+            .partner-highlight {
+                font-size: 0.9rem;
+                padding: 12px 16px;
+            }
+            
+            .btn-explore {
+                padding: 14px 24px;
+                font-size: 0.95rem;
+            }
+            
+            /* Features Section */
+            .features-section {
+                padding: 70px 0;
+            }
+            
+            .feature-card {
+                padding: 35px 25px;
+            }
+            
+            .feature-icon-wrapper {
+                width: 80px;
+                height: 80px;
+                font-size: 2rem;
+            }
+            
+            .feature-icon-wrapper::after {
+                width: 100px;
+                height: 100px;
+                top: -10px;
+                left: -10px;
+            }
+            
+            .feature-title {
+                font-size: 1.2rem;
+            }
+            
+            .feature-desc {
+                font-size: 0.95rem;
+            }
+            
+            /* Yayasan Section */
+            .yayasan-section {
+                padding: 70px 0;
+            }
+            
+            .yayasan-content h2 {
+                font-size: 1.6rem;
+            }
+            
+            .yayasan-content p {
+                font-size: 1rem;
+            }
+            
+            .yayasan-visual {
+                margin-top: 30px;
+            }
+            
+            .yayasan-icon-wrapper {
+                width: 150px;
                 height: 150px;
+                font-size: 3rem;
+            }
+            
+            .yayasan-icon-wrapper::after {
+                width: 180px;
+                height: 180px;
+                top: -15px;
+                left: -15px;
+            }
+            
+            /* About Section */
+            .about-section {
+                padding: 70px 0;
+            }
+            
+            .about-section::before {
+                height: 250px;
+            }
+            
+            .about-header {
+                margin-bottom: 50px;
+            }
+            
+            .about-main-card {
+                border-radius: 25px;
+                margin-bottom: 40px;
+            }
+            
+            .about-img-side {
+                height: 250px;
+                padding: 35px;
+            }
+            
+            .about-logo-img {
+                max-width: 180px;
+            }
+            
+            .about-content-side {
+                padding: 35px 30px;
+            }
+            
+            .about-content-side .vmt-title {
+                font-size: 1.5rem;
+            }
+            
+            .about-content-side .vmt-text {
+                font-size: 0.95rem;
+            }
+            
+            .about-vmt-grid {
+                grid-template-columns: 1fr;
+                gap: 25px;
+            }
+            
+            .vmt-card {
+                padding: 35px 25px;
+            }
+            
+            .vmt-icon {
+                width: 65px;
+                height: 65px;
+                font-size: 1.6rem;
+            }
+            
+            .vmt-title {
+                font-size: 1.3rem;
+            }
+            
+            .vmt-text {
+                font-size: 0.95rem;
+            }
+            
+            /* CTA Section */
+            .cta-section {
+                padding: 60px 0;
+            }
+            
+            .cta-content {
+                text-align: center;
+            }
+            
+            .cta-content h2 {
+                font-size: 1.7rem;
+            }
+            
+            .cta-content p {
+                font-size: 1rem;
+            }
+            
+            .btn-cta-large {
+                padding: 16px 32px;
+                font-size: 1rem;
+            }
+            
+            /* Footer */
+            .footer {
+                padding: 60px 0 30px;
+            }
+            
+            .footer-brand {
+                margin-bottom: 30px;
+                text-align: center;
+            }
+            
+            .footer-logo {
+                width: 70px;
+                max-height: 70px;
+            }
+            
+            .footer h5 {
+                font-size: 1.1rem;
+            }
+            
+            .footer-desc {
+                font-size: 0.9rem;
+            }
+            
+            .footer-section {
+                text-align: center;
+                margin-bottom: 30px;
+            }
+            
+            .footer-links a {
+                justify-content: center;
+            }
+            
+            .footer-contact li {
+                justify-content: center;
+            }
+            
+            .footer-divider {
+                margin: 30px 0;
+            }
+            
+            .footer-copyright {
+                font-size: 0.85rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .hero {
+                padding: 40px 0 30px;
+            }
+            
+            .hero-identity {
+                gap: 12px;
+                margin-bottom: 20px;
+            }
+            
+            .lppa-logo {
+                width: 60px;
+                max-height: 60px;
+            }
+            
+            .lppa-acronym {
+                font-size: 1.2rem;
+            }
+            
+            .lppa-fullname {
+                font-size: 0.75rem;
+            }
+            
+            .hero h1 {
+                font-size: 1.6rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 0.9rem;
+            }
+            
+            .filter-btn {
+                padding: 8px 16px;
+                font-size: 0.85rem;
+            }
+            
+            .section-title {
+                font-size: 1.6rem;
+            }
+            
+            .partner-name {
+                font-size: 1.2rem;
+            }
+            
+            .partner-desc {
+                font-size: 0.9rem;
+            }
+            
+            .btn-explore {
+                padding: 12px 20px;
+                font-size: 0.9rem;
+            }
+            
+            .feature-title {
+                font-size: 1.1rem;
+            }
+            
+            .feature-desc {
+                font-size: 0.9rem;
+            }
+            
+            .yayasan-content h2 {
+                font-size: 1.4rem;
+            }
+            
+            .yayasan-content p {
+                font-size: 0.9rem;
+            }
+            
+            .vmt-title {
+                font-size: 1.2rem;
+            }
+            
+            .vmt-text {
+                font-size: 0.9rem;
             }
             
             .cta-content h2 {
@@ -820,47 +1183,7 @@ $lembaga = $lembaga->fetchAll();
             }
             
             .cta-content p {
-                font-size: 0.95rem;
-            }
-            
-            .btn-cta-large {
-                padding: 15px 30px;
-                font-size: 1rem;
-            }
-            
-            .footer {
-                padding: 50px 0 20px;
-            }
-            
-            .footer-brand {
-                margin-bottom: 25px;
-            }
-            
-            .footer-social {
-                justify-content: center;
-            }
-        }
-        
-        @media (max-width: 576px) {
-            .hero h1 {
-                font-size: 1.6rem;
-            }
-            
-            .hero-badge {
-                font-size: 0.8rem;
-                padding: 6px 15px;
-            }
-            
-            .partner-name {
-                font-size: 1.2rem;
-            }
-            
-            .feature-card {
-                padding: 30px 20px;
-            }
-            
-            .section-title {
-                font-size: 1.5rem;
+                font-size: 0.9rem;
             }
         }
         
@@ -1036,6 +1359,9 @@ $lembaga = $lembaga->fetchAll();
             }
             .about-img-side {
                 height: 300px;
+            }
+            .about-content-side {
+                padding: 32px 28px;
             }
             .about-vmt-grid {
                 grid-template-columns: 1fr;
@@ -1388,23 +1714,17 @@ $lembaga = $lembaga->fetchAll();
                         <ul class="footer-contact">
                             <li>
                                 <i class="fas fa-map-marker-alt me-2"></i>
-                                <span>Bandung, Indonesia</span>
+                                <span><?= htmlspecialchars($kontakAddr) ?></span>
                             </li>
                             <li>
                                 <i class="fas fa-envelope me-2"></i>
-                                <span>info@almasoem.sch.id</span>
+                                <span><?= htmlspecialchars($kontakEmail) ?></span>
                             </li>
                             <li>
                                 <i class="fas fa-phone me-2"></i>
-                                <span>+62 22 XXX XXXX</span>
+                                <span><?= htmlspecialchars($kontakPhone) ?></span>
                             </li>
                         </ul>
-                        <div class="footer-social">
-                            <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
-                            <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
-                            <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
-                            <a href="#" class="social-link"><i class="fab fa-whatsapp"></i></a>
-                        </div>
                     </div>
                 </div>
             </div>

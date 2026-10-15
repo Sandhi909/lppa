@@ -238,6 +238,18 @@ include __DIR__ . '/../includes/header.php';
       <option value="aktif" <?= ($row['status'] ?? '') === 'aktif' ? 'selected' : '' ?>>Aktif</option>
       <option value="nonaktif" <?= ($row['status'] ?? '') === 'nonaktif' ? 'selected' : '' ?>>Tidak Aktif</option></select></div>
     <div class="col-12"><hr class="my-2"></div>
+    <?php if ($row): ?>
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="text-info mb-0"><i class="fa-solid fa-calendar-days me-2"></i>Pajak per Tahun Ajaran (Override Global)</h6>
+        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#taxPerYearModal"><i class="fa-solid fa-plus me-1"></i>Tambah/Edit</button>
+      </div>
+      <div id="taxPerYearList" class="table-responsive-wrapper" style="max-height: 250px; overflow-y: auto;">
+        <div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div>
+      </div>
+    </div>
+    <?php endif; ?>
+    <div class="col-12"><hr class="my-2"></div>
     <div class="col-md-3">
       <div class="form-check form-switch">
         <input class="form-check-input" type="checkbox" id="tax_enabled" name="tax_enabled" <?= ($row['tax_enabled'] ?? 0) ? 'checked' : '' ?>>
@@ -415,5 +427,164 @@ document.addEventListener('DOMContentLoaded', function() {
     toggleTaxMethodFields();
   }
 });
+
+// Load tax per year list
+<?php if ($row): ?>
+function loadTaxPerYearList() {
+  const partnerId = <?= (int)($row['id'] ?? 0) ?>;
+  if (!partnerId) return;
+  
+  fetch('api_tax_config.php?partner_id=' + partnerId)
+    .then(r => r.json())
+    .then(data => {
+      const html = data.length ? `<table class="table table-sm mb-0">
+        <thead><tr><th>Tahun Ajaran</th><th class="text-end">Metode</th><th class="text-end">Nilai</th><th class="text-end">Aksi</th></tr></thead>
+        <tbody>${data.map(d => `<tr>
+          <td>${d.tahun_ajaran}</td>
+          <td class="text-end"><span class="badge ${d.method === 'percentage' ? 'bg-info-soft' : d.method === 'manual' ? 'bg-warning-soft' : 'bg-secondary-soft'}">${d.method_label}</span></td>
+          <td class="text-end">${d.method === 'percentage' ? d.percentage + '%' : 'Rp' + d.manual_nominal}</td>
+          <td class="text-end"><button class="btn btn-sm btn-light" onclick="editTaxYear(${d.academic_year_id})" title="Edit"><i class="fa-solid fa-pen"></i></button>
+          <button class="btn btn-sm btn-light text-danger" onclick="deleteTaxYear(${d.academic_year_id})" title="Hapus"><i class="fa-solid fa-trash"></i></button></td>
+        </tr>`).join('')}</tbody>
+      </table>` : '<div class="alert alert-info mb-0">Belum ada pajak per tahun ajaran.</div>';
+      document.getElementById('taxPerYearList').innerHTML = html;
+    }).catch(e => {
+      document.getElementById('taxPerYearList').innerHTML = '<div class="alert alert-danger mb-0">Error loading data</div>';
+    });
+}
+
+function editTaxYear(ayId) {
+  document.getElementById('taxYearId').value = ayId;
+  document.getElementById('taxYearSelect').value = ayId;
+  
+  fetch('api_tax_config.php?partner_id=' + <?= (int)($row['id'] ?? 0) ?> + '&academic_year_id=' + ayId)
+    .then(r => r.json())
+    .then(data => {
+      const item = data[0];
+      if (item) {
+        document.getElementById('taxYearEnabled').checked = item.enabled;
+        document.getElementById('taxYearMethod').value = item.method;
+        document.getElementById('taxYearPercentage').value = item.percentage;
+        document.getElementById('taxYearManual').value = item.manual_nominal;
+        toggleTaxYearFields();
+      }
+    });
+  
+  new bootstrap.Modal(document.getElementById('taxPerYearModal')).show();
+}
+
+function deleteTaxYear(ayId) {
+  if (!confirm('Hapus pajak tahun ajaran ini?')) return;
+  
+  const fd = new FormData();
+  fd.append('action', 'delete');
+  fd.append('partner_id', <?= (int)($row['id'] ?? 0) ?>);
+  fd.append('academic_year_id', ayId);
+  
+  fetch('api_tax_config.php', {method: 'POST', body: fd})
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        alert('Pajak dihapus');
+        loadTaxPerYearList();
+      }
+    });
+}
+
+function toggleTaxYearFields() {
+  const enabled = document.getElementById('taxYearEnabled').checked;
+  const method = document.getElementById('taxYearMethod').value;
+  document.querySelector('.tax-year-fields').style.display = enabled ? 'block' : 'none';
+  document.querySelector('.tax-year-percentage-field').style.display = (enabled && method === 'percentage') ? 'block' : 'none';
+  document.querySelector('.tax-year-manual-field').style.display = (enabled && method === 'manual') ? 'block' : 'none';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  loadTaxPerYearList();
+  
+  const taxYearEnabled = document.getElementById('taxYearEnabled');
+  const taxYearMethod = document.getElementById('taxYearMethod');
+  if (taxYearEnabled) taxYearEnabled.addEventListener('change', toggleTaxYearFields);
+  if (taxYearMethod) taxYearMethod.addEventListener('change', toggleTaxYearFields);
+  
+  const taxYearForm = document.getElementById('taxYearForm');
+  if (taxYearForm) {
+    taxYearForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const fd = new FormData(this);
+      fd.append('partner_id', <?= (int)($row['id'] ?? 0) ?>);
+      fetch('api_tax_config.php', {method: 'POST', body: fd})
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            alert('Pajak disimpan');
+            bootstrap.Modal.getInstance(document.getElementById('taxPerYearModal')).hide();
+            loadTaxPerYearList();
+            document.getElementById('taxYearForm').reset();
+          } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+          }
+        });
+    });
+  }
+});
+<?php endif; ?>
 </script>
+
+<?php if ($row): ?>
+<div class="modal fade" id="taxPerYearModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" id="taxYearForm">
+      <div class="modal-header">
+        <h5 class="modal-title">Pajak per Tahun Ajaran</h5>
+        <button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="taxYearId">
+        <div class="mb-3">
+          <label class="form-label">Tahun Ajaran</label>
+          <select id="taxYearSelect" name="academic_year_id" class="form-select" required>
+            <option value="">Pilih Tahun Ajaran</option>
+            <?php
+            $allYears = db()->query('SELECT id, nama_tahun_ajaran FROM academic_years ORDER BY nama_tahun_ajaran')->fetchAll();
+            foreach ($allYears as $ay) {
+              echo '<option value="' . (int)$ay['id'] . '">' . e($ay['nama_tahun_ajaran']) . '</option>';
+            }
+            ?>
+          </select>
+        </div>
+        <div class="mb-3">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="taxYearEnabled" name="tax_enabled">
+            <label class="form-check-label" for="taxYearEnabled">Gunakan Pajak</label>
+          </div>
+        </div>
+        <div class="tax-year-fields" style="display:none;">
+          <div class="mb-3">
+            <label class="form-label">Metode Pajak</label>
+            <select id="taxYearMethod" name="tax_method" class="form-select">
+              <option value="none">Tidak Ada</option>
+              <option value="percentage">Persentase</option>
+              <option value="manual">Manual</option>
+            </select>
+          </div>
+          <div class="mb-3 tax-year-percentage-field" style="display:none;">
+            <label class="form-label">Persentase Pajak (%)</label>
+            <input type="number" id="taxYearPercentage" name="tax_percentage" class="form-control" step="0.01" min="0" max="100" value="0">
+          </div>
+          <div class="mb-3 tax-year-manual-field" style="display:none;">
+            <label class="form-label">Nominal Pajak (Rp)</label>
+            <input type="number" id="taxYearManual" name="tax_manual_nominal" class="form-control" step="1" min="0" value="0">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save me-1"></i>Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+<?php endif; ?>
+
 <?php include __DIR__ . '/../includes/footer.php'; ?>

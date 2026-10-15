@@ -136,19 +136,38 @@ function pendapatan_yayasan(float $pendapatan, $partnerId): float {
     return hitung_total_setoran($bagiHasil, $partnerId);
 }
 
-/** Get tax configuration for a partner */
-function get_tax_config($partnerId): array {
+/** Get tax configuration for a partner (with academic_year_id support) */
+function get_tax_config($partnerId, ?int $academicYearId = null): array {
     static $cache = [];
     $partnerId = (int)$partnerId;
     if ($partnerId <= 0) return ['enabled' => false, 'percentage' => 0, 'method' => 'none', 'manual_nominal' => 0];
-    if (array_key_exists($partnerId, $cache)) return $cache[$partnerId];
+    
+    $cacheKey = $partnerId . '_' . ($academicYearId ?? 'null');
+    if (array_key_exists($cacheKey, $cache)) return $cache[$cacheKey];
+    
+    // Try to get from partner_tax_config first (year-specific)
+    if ($academicYearId) {
+        $st = db()->prepare('SELECT tax_enabled, tax_percentage, tax_method, tax_manual_nominal FROM partner_tax_config WHERE partner_id = ? AND academic_year_id = ?');
+        $st->execute([$partnerId, $academicYearId]);
+        $row = $st->fetch();
+        if ($row) {
+            return $cache[$cacheKey] = [
+                'enabled' => (bool)$row['tax_enabled'],
+                'percentage' => (float)$row['tax_percentage'],
+                'method' => $row['tax_method'],
+                'manual_nominal' => (float)$row['tax_manual_nominal']
+            ];
+        }
+    }
+    
+    // Fallback to partners table (global)
     $st = db()->prepare('SELECT tax_enabled, tax_percentage, tax_method, tax_manual_nominal FROM partners WHERE id = ?');
     $st->execute([$partnerId]);
     $row = $st->fetch();
     if (!$row) {
-        return $cache[$partnerId] = ['enabled' => false, 'percentage' => 0, 'method' => 'none', 'manual_nominal' => 0];
+        return $cache[$cacheKey] = ['enabled' => false, 'percentage' => 0, 'method' => 'none', 'manual_nominal' => 0];
     }
-    return $cache[$partnerId] = [
+    return $cache[$cacheKey] = [
         'enabled' => (bool)$row['tax_enabled'],
         'percentage' => (float)$row['tax_percentage'],
         'method' => $row['tax_method'],
@@ -157,9 +176,9 @@ function get_tax_config($partnerId): array {
 }
 
 /** Calculate tax amount from bagi hasil yayasan */
-function hitung_pajak(float $bagiHasil, $partnerId): float {
+function hitung_pajak(float $bagiHasil, $partnerId, ?int $academicYearId = null): float {
     if ($bagiHasil <= 0) return 0.0;
-    $tax = get_tax_config($partnerId);
+    $tax = get_tax_config($partnerId, $academicYearId);
     if (!$tax['enabled']) {
         return 0.0;
     }
@@ -175,8 +194,8 @@ function hitung_pajak(float $bagiHasil, $partnerId): float {
 }
 
 /** Calculate total setoran after tax */
-function hitung_total_setoran(float $bagiHasil, $partnerId): float {
-    $pajak = hitung_pajak($bagiHasil, $partnerId);
+function hitung_total_setoran(float $bagiHasil, $partnerId, ?int $academicYearId = null): float {
+    $pajak = hitung_pajak($bagiHasil, $partnerId, $academicYearId);
     return $bagiHasil - $pajak;
 }
 /** Format persentase: 15.00 -> "15", 12.50 -> "12,5" */

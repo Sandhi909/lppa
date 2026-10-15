@@ -366,33 +366,253 @@ $pageImage = !empty($lembaga['logo_url']) ? base_url('uploads/partners/' . $lemb
         /* Responsive */
         @media (max-width: 768px) {
             .partner-header {
-                padding: 40px 0;
+                padding: 50px 0;
+            }
+            
+            .partner-header::before,
+            .partner-header::after {
+                display: none;
+            }
+            
+            .btn-back {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+                margin-bottom: 25px;
+            }
+            
+            .partner-cover {
+                height: 250px;
+                border-radius: 18px;
+                margin-bottom: 25px;
+            }
+            
+            .partner-logo-large {
+                max-width: 200px;
+                max-height: 170px;
+                padding: 18px;
+                border-radius: 18px;
+                margin-bottom: 25px;
             }
             
             .partner-name {
-                font-size: 1.8rem;
+                font-size: 2rem;
+                margin-bottom: 15px;
             }
             
             .partner-tagline {
                 font-size: 1rem;
+                line-height: 1.6;
+            }
+            
+            .content-section {
+                padding: 50px 0;
             }
             
             .section-card {
-                padding: 25px;
+                padding: 30px;
+                border-radius: 18px;
+                margin-bottom: 25px;
             }
             
             .section-title {
-                font-size: 1.5rem;
+                font-size: 1.6rem;
+                margin-bottom: 20px;
+                padding-bottom: 12px;
+            }
+            
+            .partner-description {
+                font-size: 1rem;
+                line-height: 1.7;
+            }
+            
+            .program-highlight {
+                padding: 20px;
+                border-radius: 14px;
+                margin-bottom: 20px;
+            }
+            
+            .program-highlight-title {
+                font-size: 1.2rem;
+            }
+            
+            .program-highlight-content {
+                font-size: 1rem;
+            }
+            
+            .pdf-card {
+                padding: 25px;
+                border-radius: 14px;
+                margin-bottom: 20px;
+            }
+            
+            .pdf-title {
+                font-size: 1.2rem;
+                margin-bottom: 12px;
+            }
+            
+            .pdf-description {
+                font-size: 0.95rem;
+                margin-bottom: 18px;
             }
             
             .pdf-actions {
                 flex-direction: column;
+                gap: 12px;
             }
             
             .btn-view-pdf,
             .btn-download-pdf {
                 width: 100%;
                 justify-content: center;
+                padding: 14px 24px;
+                font-size: 0.95rem;
+            }
+            
+            .no-pdf {
+                padding: 35px 25px;
+                border-radius: 14px;
+            }
+            
+            .no-pdf i {
+                font-size: 3rem;
+                margin-bottom: 18px;
+            }
+            
+            .no-pdf h4 {
+                font-size: 1.2rem;
+                margin-bottom: 10px;
+            }
+            
+            .no-pdf p {
+                font-size: 0.95rem;
+            }
+            
+            .gallery-item img {
+                height: 180px;
+                border-radius: 10px;
+            }
+            
+            .gallery-item p {
+                font-size: 0.85rem;
+            }
+            
+            .contact-item {
+                padding: 18px;
+                border-radius: 12px;
+                margin-bottom: 18px;
+            }
+            
+            .contact-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+            
+            .contact-label {
+                font-size: 0.9rem;
+                margin-bottom: 6px;
+            }
+            
+            .contact-value {
+                font-size: 0.95rem;
+            }
+            
+            .ratio {
+                border-radius: 12px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .partner-header {
+                padding: 40px 0;
+            }
+            
+            .btn-back {
+                padding: 8px 16px;
+                font-size: 0.85rem;
+                margin-bottom: 20px;
+            }
+            
+            .partner-cover {
+                height: 200px;
+                border-radius: 15px;
+                margin-bottom: 20px;
+            }
+            
+            .partner-logo-large {
+                max-width: 170px;
+                max-height: 140px;
+                padding: 15px;
+                border-radius: 15px;
+                margin-bottom: 20px;
+            }
+            
+            .partner-name {
+                font-size: 1.6rem;
+                margin-bottom: 12px;
+            }
+            
+            .partner-tagline {
+                font-size: 0.9rem;
+            }
+            
+            .content-section {
+                padding: 40px 0;
+            }
+            
+            .section-card {
+                padding: 25px;
+                border-radius: 15px;
+                margin-bottom: 20px;
+            }
+            
+            .section-title {
+                font-size: 1.4rem;
+                margin-bottom: 18px;
+            }
+            
+            .partner-description {
+                font-size: 0.95rem;
+            }
+            
+            .program-highlight-title {
+                font-size: 1.1rem;
+            }
+            
+            .program-highlight-content {
+                font-size: 0.95rem;
+            }
+            
+            .pdf-title {
+                font-size: 1.1rem;
+            }
+            
+            .pdf-description {
+                font-size: 0.9rem;
+            }
+            
+            .btn-view-pdf,
+            .btn-download-pdf {
+                padding: 12px 20px;
+                font-size: 0.9rem;
+            }
+            
+            .gallery-item img {
+                height: 150px;
+            }
+            
+            .contact-icon {
+                width: 45px;
+                height: 45px;
+                font-size: 1.1rem;
+            }
+            
+            .contact-label {
+                font-size: 0.85rem;
+            }
+            
+            .contact-value {
+                font-size: 0.9rem;
             }
         }
     </style>

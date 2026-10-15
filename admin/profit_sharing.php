@@ -24,7 +24,7 @@ $totalBiaya = 0.0; $totalYayasan = 0.0;
 foreach ($list as $r) {
     $totalBiaya += (float)$r['total_biaya'];
     $bagiHasil = (float)$r['total_biaya'] * (float)$r['persentase_bagi_hasil'] / 100;
-    $setoranBersih = hitung_total_setoran($bagiHasil, $r['id']);
+    $setoranBersih = hitung_total_setoran($bagiHasil, $r['id'], null);
     $totalYayasan += $setoranBersih;
 }
 

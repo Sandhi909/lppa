@@ -163,7 +163,7 @@ include __DIR__ . '/../includes/header.php';
   // Use the selected academic year filter
   $taxFilters = $filterAcademicYear ? ['academic_year_id' => $filterAcademicYear] : [];
   [$where, $params] = student_filters($taxFilters, ['partner_id' => $pid]);
-  $taxInfo = info_pajak_mitra($pid, $where, $params);
+  $taxInfo = info_pajak_mitra($pid, $where, $params, $filterAcademicYear ?: null);
   ?>
   <div class="col-md-4"><div class="stat-card d-flex gap-3 align-items-center">
     <span class="stat-icon navy"><i class="fa-solid fa-file-invoice-dollar"></i></span>

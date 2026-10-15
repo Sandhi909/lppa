@@ -73,9 +73,10 @@ $cards = [
       <?php foreach ($rekapMitra as $m): ?>
         <?php
         $bagiHasil = $m['total_biaya'] * $m['persentase_bagi_hasil'] / 100;
-        $setoranBersih = hitung_total_setoran($bagiHasil, $m['partner_id']);
-        $taxInfo = info_pajak_mitra($m['partner_id']);
-        $sisaSetoran = $setoranBersih - total_setoran_disetujui($m['partner_id']);
+        $currentAcademicYearId = $_GET['academic_year_id'] ?? $latestTAId;
+        $setoranBersih = hitung_total_setoran($bagiHasil, $m['partner_id'], $currentAcademicYearId);
+        $taxInfo = info_pajak_mitra($m['partner_id'], '1=1', [], $currentAcademicYearId);
+        $sisaSetoran = $setoranBersih - total_setoran_disetujui($m['partner_id'], $currentAcademicYearId);
         ?>
         <tr><td><?= e($m['nama_mitra']) ?></td>
         <td class="text-end"><span class="badge bg-primary-soft"><?= persen_fmt($m['persentase_bagi_hasil']) ?>%</span></td>
